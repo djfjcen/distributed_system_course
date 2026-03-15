@@ -10,8 +10,79 @@ services:
     ports:
       - "3306:3306"
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     volumes:
       - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: seckill-redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  backend-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: seckill-backend-1
+    restart: always
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: seckill_demo
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SERVER_PORT: 8080
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8081:8080"
+
+  backend-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: seckill-backend-2
+    restart: always
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: seckill_demo
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SERVER_PORT: 8080
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8082:8080"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: seckill-nginx
+    restart: always
+    depends_on:
+      - backend-1
+      - backend-2
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
 
 volumes:
   mysql_data:

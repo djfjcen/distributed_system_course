@@ -1,0 +1,99 @@
+:root {
+  --bg: #f3f5f7;
+  --card: #ffffff;
+  --text: #1a2433;
+  --muted: #5a6a85;
+  --primary: #0a66c2;
+  --border: #d8e0ea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text);
+  background: linear-gradient(120deg, #f6fbff, #eef3f8);
+}
+
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+.hero {
+  margin-bottom: 16px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.hero p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 20px rgba(22, 45, 74, 0.06);
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 20px;
+}
+
+form {
+  display: grid;
+  gap: 10px;
+}
+
+input,
+button {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+button:hover {
+  filter: brightness(1.05);
+}
+
+#productsList {
+  margin: 12px 0 0;
+  padding-left: 18px;
+}
+
+#output {
+  min-height: 140px;
+  white-space: pre-wrap;
+  background: #101827;
+  color: #d2e4ff;
+  border-radius: 8px;
+  padding: 12px;
+  overflow: auto;
+}

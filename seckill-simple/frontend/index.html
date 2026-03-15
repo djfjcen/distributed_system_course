@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>秒杀系统演示</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <h1>秒杀系统演示面板</h1>
+      <p>静态页面由 Nginx 提供，接口请求由 Nginx 代理到后端集群。</p>
+    </header>
+
+    <section class="card">
+      <h2>商品列表</h2>
+      <button id="loadProductsBtn">加载商品</button>
+      <ul id="productsList"></ul>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>用户注册</h2>
+        <form id="registerForm">
+          <input name="username" placeholder="用户名" required />
+          <input name="email" placeholder="邮箱" required />
+          <input name="password" placeholder="密码" type="password" required />
+          <button type="submit">注册</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>用户登录</h2>
+        <form id="loginForm">
+          <input name="username" placeholder="用户名" required />
+          <input name="password" placeholder="密码" type="password" required />
+          <button type="submit">登录</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>秒杀下单</h2>
+      <form id="seckillForm">
+        <input name="productId" placeholder="商品ID" type="number" min="1" required />
+        <input name="quantity" placeholder="数量" type="number" min="1" value="1" required />
+        <button type="submit">提交秒杀</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>接口返回</h2>
+      <pre id="output"></pre>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
