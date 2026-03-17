@@ -1,5 +1,6 @@
 package com.example.seckill.service;
 
+import com.example.seckill.datasource.ReadOnlyDataSource;
 import com.example.seckill.entity.Product;
 import com.example.seckill.repository.ProductRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,10 +38,12 @@ public class InventoryService {
         this.objectMapper = objectMapper;
     }
 
+    @ReadOnlyDataSource
     public List<Product> listProducts() {
         return productRepository.findAll();
     }
 
+    @ReadOnlyDataSource
     public Product getProductDetail(Long productId) {
         String cacheKey = PRODUCT_CACHE_KEY_PREFIX + productId;
         String lockKey = PRODUCT_LOCK_KEY_PREFIX + productId;

@@ -1,22 +1,80 @@
 services:
-  mysql:
+  mysql-master:
     image: mysql:8.0
-    container_name: seckill-mysql
+    container_name: seckill-mysql-master
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: seckill_demo
       TZ: UTC
     ports:
-      - "3306:3306"
-    command: --default-authentication-plugin=mysql_native_password
+      - "3307:3306"
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --server-id=1
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --gtid_mode=ON
+      - --enforce-gtid-consistency=ON
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 10
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_master_data:/var/lib/mysql
+      - ./mysql/master/init:/docker-entrypoint-initdb.d:ro
+
+  mysql-slave:
+    image: mysql:8.0
+    container_name: seckill-mysql-slave
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: UTC
+    ports:
+      - "3308:3306"
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --server-id=2
+      - --relay-log=relay-bin
+      - --log-bin=mysql-bin
+      - --gtid_mode=ON
+      - --enforce-gtid-consistency=ON
+      - --read-only=ON
+      - --super-read-only=ON
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+    volumes:
+      - mysql_slave_data:/var/lib/mysql
+      - ./mysql/slave/init:/docker-entrypoint-initdb.d:ro
+
+  mysql-replica-setup:
+    image: mysql:8.0
+    container_name: seckill-mysql-replica-setup
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+      mysql-slave:
+        condition: service_healthy
+    restart: "no"
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        until mysql -hmysql-master -uroot -proot -e "SELECT 1"; do sleep 2; done
+        until mysql -hmysql-slave -uroot -proot -e "SELECT 1"; do sleep 2; done
+        mysql -hmysql-slave -uroot -proot -e "STOP REPLICA;"
+        mysql -hmysql-slave -uroot -proot -e "CHANGE REPLICATION SOURCE TO SOURCE_HOST='mysql-master', SOURCE_PORT=3306, SOURCE_USER='repl', SOURCE_PASSWORD='repl123', SOURCE_AUTO_POSITION=1, GET_SOURCE_PUBLIC_KEY=1;"
+        mysql -hmysql-slave -uroot -proot -e "START REPLICA;"
+        mysql -hmysql-slave -uroot -proot -e "SHOW REPLICA STATUS\\G"
 
   redis:
     image: redis:7-alpine
@@ -32,8 +90,10 @@ services:
     container_name: seckill-backend-1
     restart: always
     environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
+      DB_WRITE_HOST: mysql-master
+      DB_WRITE_PORT: 3306
+      DB_READ_HOST: mysql-slave
+      DB_READ_PORT: 3306
       DB_NAME: seckill_demo
       DB_USERNAME: root
       DB_PASSWORD: root
@@ -41,8 +101,12 @@ services:
       REDIS_PORT: 6379
       SERVER_PORT: 8080
     depends_on:
-      mysql:
+      mysql-master:
         condition: service_healthy
+      mysql-slave:
+        condition: service_healthy
+      mysql-replica-setup:
+        condition: service_completed_successfully
       redis:
         condition: service_started
     ports:
@@ -55,8 +119,10 @@ services:
     container_name: seckill-backend-2
     restart: always
     environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
+      DB_WRITE_HOST: mysql-master
+      DB_WRITE_PORT: 3306
+      DB_READ_HOST: mysql-slave
+      DB_READ_PORT: 3306
       DB_NAME: seckill_demo
       DB_USERNAME: root
       DB_PASSWORD: root
@@ -64,8 +130,12 @@ services:
       REDIS_PORT: 6379
       SERVER_PORT: 8080
     depends_on:
-      mysql:
+      mysql-master:
         condition: service_healthy
+      mysql-slave:
+        condition: service_healthy
+      mysql-replica-setup:
+        condition: service_completed_successfully
       redis:
         condition: service_started
     ports:
@@ -85,4 +155,5 @@ services:
       - ./frontend:/usr/share/nginx/html:ro
 
 volumes:
-  mysql_data:
+  mysql_master_data:
+  mysql_slave_data:

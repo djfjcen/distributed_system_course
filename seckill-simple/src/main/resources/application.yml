@@ -1,13 +1,22 @@
 server:
   port: 8080
 
+app:
+  datasource:
+    write:
+      url: jdbc:mysql://${DB_WRITE_HOST:localhost}:${DB_WRITE_PORT:3306}/${DB_NAME:seckill_demo}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      username: ${DB_USERNAME:root}
+      password: ${DB_PASSWORD:root}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    read:
+      url: jdbc:mysql://${DB_READ_HOST:localhost}:${DB_READ_PORT:3306}/${DB_NAME:seckill_demo}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      username: ${DB_USERNAME:root}
+      password: ${DB_PASSWORD:root}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
 spring:
   cache:
     type: redis
-  datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:seckill_demo}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -24,6 +33,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  datasource:
+    hikari:
+      maximum-pool-size: 10
   jackson:
     serialization:
       indent_output: true
