@@ -24,6 +24,22 @@ document.getElementById('loadProductsBtn').addEventListener('click', async () =>
   });
 });
 
+document.getElementById('searchForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const keyword = (form.get('keyword') || '').toString().trim();
+  const url = keyword ? `/api/search/products?keyword=${encodeURIComponent(keyword)}` : '/api/search/products';
+  const data = await request(url);
+  productsList.innerHTML = '';
+
+  const products = data.data || [];
+  products.forEach((p) => {
+    const li = document.createElement('li');
+    li.textContent = `商品ID=${p.id}，名称=${p.name}，库存=${p.stock}，价格=${p.price}`;
+    productsList.appendChild(li);
+  });
+});
+
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = new FormData(e.target);

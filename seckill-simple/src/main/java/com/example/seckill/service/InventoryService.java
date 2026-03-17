@@ -29,18 +29,53 @@ public class InventoryService {
     private final ProductRepository productRepository;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
+    private final ProductSearchService productSearchService;
 
     public InventoryService(ProductRepository productRepository,
                             StringRedisTemplate stringRedisTemplate,
-                            ObjectMapper objectMapper) {
+                            ObjectMapper objectMapper,
+                            ProductSearchService productSearchService) {
         this.productRepository = productRepository;
         this.stringRedisTemplate = stringRedisTemplate;
         this.objectMapper = objectMapper;
+        this.productSearchService = productSearchService;
     }
 
     @ReadOnlyDataSource
     public List<Product> listProducts() {
         return productRepository.findAll();
+    }
+
+    @Transactional
+    public Product createProduct(String name, Integer stock, java.math.BigDecimal price) {
+        Product product = new Product();
+        product.setName(name.trim());
+        product.setStock(stock);
+        product.setPrice(price);
+        Product saved = productRepository.save(product);
+        productSearchService.saveOrUpdate(saved);
+        return saved;
+    }
+
+    @Transactional
+    public Product updateProduct(Long productId, String name, Integer stock, java.math.BigDecimal price) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("product not found: " + productId));
+        if (name != null && !name.isBlank()) {
+            product.setName(name.trim());
+        }
+        if (stock != null) {
+            product.setStock(stock);
+        }
+        if (price != null) {
+            product.setPrice(price);
+        }
+        Product saved = productRepository.save(product);
+        // 清除 Redis 缓存，保证下次读到最新数据
+        stringRedisTemplate.delete(PRODUCT_CACHE_KEY_PREFIX + productId);
+        // 同步更新 ES 索引
+        productSearchService.saveOrUpdate(saved);
+        return saved;
     }
 
     @ReadOnlyDataSource
@@ -110,6 +145,7 @@ public class InventoryService {
         product.setStock(product.getStock() - quantity);
         Product savedProduct = productRepository.save(product);
         stringRedisTemplate.delete(PRODUCT_CACHE_KEY_PREFIX + productId);
+        productSearchService.saveOrUpdate(savedProduct);
         return savedProduct;
     }
 

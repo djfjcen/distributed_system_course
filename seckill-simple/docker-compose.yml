@@ -83,6 +83,17 @@ services:
     ports:
       - "6379:6379"
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    container_name: seckill-elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+
   backend-1:
     build:
       context: .
@@ -99,6 +110,8 @@ services:
       DB_PASSWORD: root
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      ES_HOST: elasticsearch
+      ES_PORT: 9200
       SERVER_PORT: 8080
     depends_on:
       mysql-master:
@@ -108,6 +121,8 @@ services:
       mysql-replica-setup:
         condition: service_completed_successfully
       redis:
+        condition: service_started
+      elasticsearch:
         condition: service_started
     ports:
       - "8081:8080"
@@ -128,6 +143,8 @@ services:
       DB_PASSWORD: root
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      ES_HOST: elasticsearch
+      ES_PORT: 9200
       SERVER_PORT: 8080
     depends_on:
       mysql-master:
@@ -137,6 +154,8 @@ services:
       mysql-replica-setup:
         condition: service_completed_successfully
       redis:
+        condition: service_started
+      elasticsearch:
         condition: service_started
     ports:
       - "8082:8080"

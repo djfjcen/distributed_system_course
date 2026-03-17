@@ -1,11 +1,11 @@
 # seckill-simple
 
-一个课程作业友好的最简骨架：Spring Boot + Spring Data JPA + MySQL 主从 + Redis + Nginx。
+一个课程作业友好的最简骨架：Spring Boot + Spring Data JPA + MySQL 主从 + Redis + Elasticsearch + Nginx。
 
 ## 1. 环境要求
 - JDK 17+
 - Maven 3.9+
-- Docker（用于启动 MySQL 主从、Redis、后端和 Nginx）
+- Docker（用于启动 MySQL 主从、Redis、Elasticsearch、后端和 Nginx）
 
 ## 2. 容器化启动
 在项目根目录执行：
@@ -23,8 +23,10 @@ docker compose ps
 - MySQL 主库：localhost:3307
 - MySQL 从库：localhost:3308
 - Redis：localhost:6379
+- Elasticsearch：http://localhost:9200
 - 通过 Nginx 代理的 API 示例：http://localhost/api/products
 - 商品详情缓存接口示例：http://localhost/api/products/1
+- 商品搜索接口示例：http://localhost/api/search/products?keyword=键盘
 
 ## 3. 分布式特性说明
 
@@ -61,6 +63,16 @@ Redis 缓存说明：
 - 缓存击穿：热点 key 重建时使用互斥锁（setIfAbsent + 过期时间）
 - 缓存雪崩：商品详情缓存使用基础 TTL + 随机抖动，错开大量 key 同时过期
 
+### 3.4 Elasticsearch 商品搜索
+- 搜索索引：products
+- 启动后自动将 MySQL 商品数据同步到 Elasticsearch
+- 秒杀写操作后会同步更新商品索引，保证库存搜索结果一致
+
+搜索接口：
+- GET http://localhost/api/search/products?keyword=键盘
+- GET http://localhost/api/search/products（不传 keyword 返回全部索引商品）
+- POST http://localhost/api/search/rebuild（手动重建索引）
+
 ## 4. 读写分离验证步骤
 1. 读写路由验证
 - 访问写探针：GET http://localhost:8081/api/rw/write-host
@@ -85,6 +97,18 @@ mvn spring-boot:run
 查询商品：
 
 GET http://localhost/api/products
+
+新增商品：
+
+POST http://localhost/api/products
+
+```json
+{
+	"name": "游戏手柄",
+	"stock": 66,
+	"price": 239.00
+}
+```
 
 用户注册：
 
