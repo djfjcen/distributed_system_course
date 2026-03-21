@@ -94,6 +94,34 @@ services:
     ports:
       - "9200:9200"
 
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: seckill-zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: seckill-kafka
+    restart: always
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
   backend-1:
     build:
       context: .
@@ -112,6 +140,7 @@ services:
       REDIS_PORT: 6379
       ES_HOST: elasticsearch
       ES_PORT: 9200
+      KAFKA_BROKER: kafka:9092
       SERVER_PORT: 8080
     depends_on:
       mysql-master:
@@ -124,6 +153,8 @@ services:
         condition: service_started
       elasticsearch:
         condition: service_started
+      kafka:
+        condition: service_healthy
     ports:
       - "8081:8080"
 
@@ -145,6 +176,7 @@ services:
       REDIS_PORT: 6379
       ES_HOST: elasticsearch
       ES_PORT: 9200
+      KAFKA_BROKER: kafka:9092
       SERVER_PORT: 8080
     depends_on:
       mysql-master:
@@ -157,6 +189,8 @@ services:
         condition: service_started
       elasticsearch:
         condition: service_started
+      kafka:
+        condition: service_healthy
     ports:
       - "8082:8080"
 
