@@ -1,0 +1,12 @@
+mode:
+  type: Standalone
+
+authority:
+  users:
+    - root@%:root
+  privilege:
+    type: ALL_PERMITTED
+
+props:
+  sql-show: true
+  proxy-hint-enabled: true

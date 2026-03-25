@@ -241,6 +241,29 @@ curl http://localhost/api/orders/user/2
 docker logs seckill-backend-1 | grep "Consume seckill order"
 ```
 
+### 5.6 选做：订单分库分表（ShardingSphere-Proxy）
+- 方案：ShardingSphere-Proxy
+- 分库规则：按 user_id 分库，ds${user_id % 2}
+- 分表规则：按订单ID高位分表，orders_${(id / 4096) % 2}
+- 逻辑库名：seckill_proxy_db
+
+关键配置文件：
+- shardingsphere-proxy/conf/server.yaml
+- shardingsphere-proxy/conf/config-sharding.yaml
+
+初始化脚本：
+- mysql/master/init/03-init-sharding.sql
+
+验证命令：
+```bash
+# 创建订单（不同 userId）
+curl -X POST 'http://localhost/api/orders/seckill?userId=121' -H "Content-Type: application/json" -d '{"productId":2,"quantity":1}'
+curl -X POST 'http://localhost/api/orders/seckill?userId=122' -H "Content-Type: application/json" -d '{"productId":2,"quantity":1}'
+
+# 查看四个物理分片表数据量
+docker exec seckill-mysql-master mysql -uroot -proot -e "SELECT 'seckill_demo.orders_0' AS shard, COUNT(*) AS cnt FROM seckill_demo.orders_0 UNION ALL SELECT 'seckill_demo.orders_1', COUNT(*) FROM seckill_demo.orders_1 UNION ALL SELECT 'seckill_demo_1.orders_0', COUNT(*) FROM seckill_demo_1.orders_0 UNION ALL SELECT 'seckill_demo_1.orders_1', COUNT(*) FROM seckill_demo_1.orders_1;"
+```
+
 ---
 
 ## 6. 本地开发启动（可选）
