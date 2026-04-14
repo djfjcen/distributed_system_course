@@ -1,4 +1,16 @@
 services:
+  nacos:
+    image: nacos/nacos-server:v2.3.2
+    container_name: seckill-nacos
+    restart: always
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+
   mysql-master:
     image: mysql:8.0
     container_name: seckill-mysql-master
@@ -155,6 +167,7 @@ services:
       ES_HOST: elasticsearch
       ES_PORT: 9200
       KAFKA_BROKER: kafka:9092
+      NACOS_ADDR: nacos:8848
       SERVER_PORT: 8080
     depends_on:
       mysql-master:
@@ -170,6 +183,8 @@ services:
       kafka:
         condition: service_healthy
       shardingsphere-proxy:
+        condition: service_started
+      nacos:
         condition: service_started
     ports:
       - "8081:8080"
@@ -193,6 +208,7 @@ services:
       ES_HOST: elasticsearch
       ES_PORT: 9200
       KAFKA_BROKER: kafka:9092
+      NACOS_ADDR: nacos:8848
       SERVER_PORT: 8080
     depends_on:
       mysql-master:
@@ -208,6 +224,8 @@ services:
       kafka:
         condition: service_healthy
       shardingsphere-proxy:
+        condition: service_started
+      nacos:
         condition: service_started
     ports:
       - "8082:8080"

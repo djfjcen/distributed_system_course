@@ -1,20 +1,11 @@
 server:
   port: 8080
 
-app:
-  datasource:
-    write:
-      url: jdbc:mysql://${DB_WRITE_HOST:localhost}:${DB_WRITE_PORT:3306}/${DB_NAME:seckill_demo}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      username: ${DB_USERNAME:root}
-      password: ${DB_PASSWORD:root}
-      driver-class-name: com.mysql.cj.jdbc.Driver
-    read:
-      url: jdbc:mysql://${DB_READ_HOST:localhost}:${DB_READ_PORT:3306}/${DB_NAME:seckill_demo}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      username: ${DB_USERNAME:root}
-      password: ${DB_PASSWORD:root}
-      driver-class-name: com.mysql.cj.jdbc.Driver
-
 spring:
+  application:
+    name: seckill-simple
+  config:
+    import: optional:nacos:${spring.application.name}.yaml?group=DEFAULT_GROUP&refreshEnabled=true
   elasticsearch:
     uris: http://${ES_HOST:localhost}:${ES_PORT:9200}
   cache:
@@ -54,6 +45,28 @@ spring:
   jackson:
     serialization:
       indent_output: true
+  cloud:
+    nacos:
+      server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+      discovery:
+        enabled: true
+      config:
+        enabled: true
+        file-extension: yaml
+        refresh-enabled: true
+
+app:
+  datasource:
+    write:
+      url: jdbc:mysql://${DB_WRITE_HOST:localhost}:${DB_WRITE_PORT:3306}/${DB_NAME:seckill_demo}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      username: ${DB_USERNAME:root}
+      password: ${DB_PASSWORD:root}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    read:
+      url: jdbc:mysql://${DB_READ_HOST:localhost}:${DB_READ_PORT:3306}/${DB_NAME:seckill_demo}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      username: ${DB_USERNAME:root}
+      password: ${DB_PASSWORD:root}
+      driver-class-name: com.mysql.cj.jdbc.Driver
 
 logging:
   level:
