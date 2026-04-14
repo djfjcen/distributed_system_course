@@ -1,10 +1,12 @@
 package com.example.seckill.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.DynamicUpdate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
+@DynamicUpdate
 @Table(name = "orders", indexes = {
         @Index(name = "idx_user_id", columnList = "user_id"),
         @Index(name = "idx_product_id", columnList = "product_id"),

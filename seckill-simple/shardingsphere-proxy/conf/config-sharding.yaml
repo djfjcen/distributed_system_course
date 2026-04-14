@@ -48,3 +48,6 @@ rules:
     tables:
       - ds0.product
       - ds0.app_user
+      - ds0.stock_reservation
+      - ds0.payment_txn
+      - ds0.processed_message
