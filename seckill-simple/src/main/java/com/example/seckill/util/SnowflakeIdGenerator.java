@@ -9,7 +9,6 @@ package com.example.seckill.util;
 public class SnowflakeIdGenerator {
 
     private static final long EPOCH = 1704067200000L; // 2024-01-01 00:00:00
-    private static final int TIMESTAMP_BITS = 41;
     private static final int DATACENTER_BITS = 5;
     private static final int WORKER_BITS = 5;
     private static final int SEQUENCE_BITS = 12;
