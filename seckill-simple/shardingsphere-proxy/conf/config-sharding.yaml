@@ -1,0 +1,53 @@
+databaseName: seckill_proxy_db
+
+dataSources:
+  ds0:
+    url: jdbc:mysql://mysql-master:3306/seckill_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: root
+    connectionTimeoutMilliseconds: 30000
+    idleTimeoutMilliseconds: 60000
+    maxLifetimeMilliseconds: 1800000
+    maxPoolSize: 16
+    minPoolSize: 1
+  ds1:
+    url: jdbc:mysql://mysql-master:3306/seckill_demo_1?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: root
+    connectionTimeoutMilliseconds: 30000
+    idleTimeoutMilliseconds: 60000
+    maxLifetimeMilliseconds: 1800000
+    maxPoolSize: 16
+    minPoolSize: 1
+
+rules:
+  - !SHARDING
+    tables:
+      orders:
+        actualDataNodes: ds${0..1}.orders_${0..1}
+        databaseStrategy:
+          standard:
+            shardingColumn: user_id
+            shardingAlgorithmName: order-db-inline
+        tableStrategy:
+          standard:
+            shardingColumn: id
+            shardingAlgorithmName: order-tb-inline
+
+    shardingAlgorithms:
+      order-db-inline:
+        type: INLINE
+        props:
+          algorithm-expression: ds${user_id % 2}
+      order-tb-inline:
+        type: INLINE
+        props:
+          algorithm-expression: orders_${(id / 4096) % 2}
+
+  - !SINGLE
+    tables:
+      - ds0.product
+      - ds0.app_user
+      - ds0.stock_reservation
+      - ds0.payment_txn
+      - ds0.processed_message
